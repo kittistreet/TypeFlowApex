@@ -1,7 +1,7 @@
 "use strict";
 
 const state = { data: null, prompts: [], baseText: "", text: "", index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30, caseMode: "default" };
-const el = Object.fromEntries(["level-select", "set-select", "code-display", "status-message", "timer", "wpm", "accuracy", "results", "result-wpm", "result-accuracy", "result-time", "result-raw-wpm", "result-cpm", "restart-button", "try-again"].map(id => [id.replaceAll("-", ""), document.getElementById(id)]));
+const el = Object.fromEntries(["level-select", "set-select", "code-display", "status-message", "timer", "wpm", "accuracy", "results", "result-wpm", "result-accuracy", "result-time", "result-raw-wpm", "result-cpm", "restart-button", "try-again", "next-text"].map(id => [id.replaceAll("-", ""), document.getElementById(id)]));
 const choices = document.querySelectorAll(".choice");
 const savedSelection = {
   get(key) { try { return localStorage.getItem(`typeflow.${key}`); } catch { return null; } },
@@ -132,7 +132,10 @@ function renderAmountButtons() {
 }
 el.levelselect.addEventListener("change", () => { savedSelection.set("level", el.levelselect.value); populateSets(); savedSelection.set("set", el.setselect.value); restart(); });
 el.setselect.addEventListener("change", () => { savedSelection.set("set", el.setselect.value); restart(); });
-el.restartbutton.addEventListener("click", restart); el.tryagain.addEventListener("click", restart); document.addEventListener("keydown", handleKey);
+el.restartbutton.addEventListener("click", restart);
+el.tryagain.addEventListener("click", () => restart(false));
+el.nexttext.addEventListener("click", () => restart(true));
+document.addEventListener("keydown", handleKey);
 choices.forEach(button => { if (button.dataset.mode) button.addEventListener("click", () => { document.querySelectorAll('[data-mode]').forEach(item => item.classList.remove("active")); button.classList.add("active"); state.mode = button.dataset.mode; renderAmountButtons(); restart(); }); });
 document.querySelectorAll("[data-case]").forEach(button => {
   button.classList.toggle("active", button.dataset.case === state.caseMode);

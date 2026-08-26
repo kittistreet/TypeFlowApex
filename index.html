@@ -13,7 +13,10 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <a class="brand" href="./" aria-label="Restart Typeflow">typeflow<span>_</span></a>
+        <div class="brand-lockup">
+          <a class="brand" href="./" aria-label="Restart Typeflow">typeflow<span>_</span></a>
+          <span class="credit">TypeFlow By KTT.W</span>
+        </div>
         <div class="live-stats" aria-live="polite">
           <div><span id="wpm">0</span><small>wpm</small></div>
           <div><span id="accuracy">100</span><small>acc</small></div>
@@ -59,7 +62,10 @@
           <div><span id="result-raw-wpm">0</span><small>raw wpm</small></div>
           <div><span id="result-cpm">0</span><small>raw cpm</small></div>
         </div>
-        <button id="try-again" type="button">try again</button>
+        <div class="result-actions">
+          <button id="try-again" type="button">try again</button>
+          <button id="next-text" class="next-text" type="button">next <span aria-hidden="true">→</span></button>
+        </div>
       </section>
     </main>
     <script src="script.js"></script>
