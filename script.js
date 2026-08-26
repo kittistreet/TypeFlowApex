@@ -1,7 +1,7 @@
 "use strict";
 
-const state = { data: null, prompts: [], text: "", index: 0, mistakes: 0, typed: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30 };
-const el = Object.fromEntries(["level-select", "set-select", "code-display", "status-message", "timer", "wpm", "accuracy", "results", "result-wpm", "result-accuracy", "result-time", "result-cpm", "restart-button", "try-again"].map(id => [id.replaceAll("-", ""), document.getElementById(id)]));
+const state = { data: null, prompts: [], text: "", index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30 };
+const el = Object.fromEntries(["level-select", "set-select", "code-display", "status-message", "timer", "wpm", "accuracy", "results", "result-wpm", "result-accuracy", "result-time", "result-raw-wpm", "result-cpm", "restart-button", "try-again"].map(id => [id.replaceAll("-", ""), document.getElementById(id)]));
 const choices = document.querySelectorAll(".choice");
 
 async function loadData() {
@@ -53,7 +53,7 @@ function buildText() {
 }
 function restart() {
   clearInterval(state.timerId);
-  Object.assign(state, { index: 0, mistakes: 0, typed: 0, startedAt: 0, elapsed: 0, running: false });
+  Object.assign(state, { index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, running: false, history: [] });
   try { state.text = buildText(); } catch (error) { el.statusmessage.textContent = error.message; el.statusmessage.classList.add("error"); return; }
   el.statusmessage.textContent = "Start typing to begin";
   el.statusmessage.classList.remove("error"); el.results.classList.add("hidden"); document.querySelector(".test-panel").classList.remove("test-over");
@@ -67,7 +67,7 @@ function render() {
     span.textContent = char; return span;
   }));
 }
-function start() { state.running = true; state.startedAt = performance.now(); state.history = []; if (state.mode === "time") state.timerId = setInterval(tick, 100); }
+function start() { state.running = true; state.startedAt = performance.now(); if (state.mode === "time") state.timerId = setInterval(tick, 100); }
 function tick() { state.elapsed = (performance.now() - state.startedAt) / 1000; const left = Math.max(0, state.amount - state.elapsed); el.timer.textContent = Math.ceil(left); updateStats(); if (left <= 0) finish(); }
 function handleKey(event) {
   if (event.key === "Tab" || event.key === "Escape") { event.preventDefault(); restart(); return; }
@@ -75,20 +75,31 @@ function handleKey(event) {
     event.preventDefault();
     if (!state.text || state.index === 0) return;
     state.index--;
-    if (state.history[state.index] === false) state.mistakes--;
+    if (state.history[state.index] === false) state.uncorrectedErrors--;
     delete state.history[state.index];
-    state.typed--;
     render(); updateStats();
     return;
   }
   if (!state.text || state.index >= state.text.length || event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
   event.preventDefault(); if (!state.running) start();
-  const correct = event.key === state.text[state.index]; state.history[state.index] = correct; state.typed++; if (!correct) state.mistakes++;
+  const correct = event.key === state.text[state.index]; state.history[state.index] = correct;
+  state.inputChars++;
+  if (correct) state.correctChars++; else { state.incorrectChars++; state.uncorrectedErrors++; }
   state.index++; render(); updateStats();
   if (state.mode === "sentences" && state.index === state.text.length) finish();
 }
-function updateStats() { const minutes = Math.max(state.elapsed || (state.running ? .01 : 0), .01) / 60; const wpm = Math.max(0, Math.round((state.typed - state.mistakes) / 5 / minutes)); const acc = state.typed ? Math.round(((state.typed - state.mistakes) / state.typed) * 100) : 100; el.wpm.textContent = wpm; el.accuracy.textContent = acc; }
-function finish() { if (!state.running) return; clearInterval(state.timerId); state.elapsed = state.mode === "time" ? state.amount : (performance.now() - state.startedAt) / 1000; state.running = false; const minutes = Math.max(state.elapsed / 60, .01), correct = state.typed - state.mistakes, wpm = Math.max(0, Math.round(correct / 5 / minutes)), acc = state.typed ? Math.round(correct / state.typed * 100) : 0, cpm = Math.round(state.typed / minutes); el.resultwpm.textContent = wpm; el.resultaccuracy.textContent = `${acc}%`; el.resulttime.textContent = `${state.elapsed.toFixed(1)}s`; el.resultcpm.textContent = cpm; document.querySelector(".test-panel").classList.add("test-over"); el.results.classList.remove("hidden"); }
+function getMetrics(elapsed = state.elapsed) {
+  const minutes = Math.max(elapsed / 60, .01);
+  const rawWpm = state.inputChars / 5 / minutes;
+  return {
+    rawWpm: Math.round(rawWpm),
+    netWpm: Math.max(0, Math.round(rawWpm - state.uncorrectedErrors / minutes)),
+    accuracy: state.inputChars ? Math.round(state.correctChars / state.inputChars * 100) : 100,
+    rawCpm: Math.round(state.inputChars / minutes)
+  };
+}
+function updateStats() { const elapsed = state.running ? (performance.now() - state.startedAt) / 1000 : state.elapsed; const metrics = getMetrics(elapsed); el.wpm.textContent = metrics.netWpm; el.accuracy.textContent = metrics.accuracy; }
+function finish() { if (!state.running) return; clearInterval(state.timerId); state.elapsed = state.mode === "time" ? state.amount : (performance.now() - state.startedAt) / 1000; state.running = false; const metrics = getMetrics(); el.resultwpm.textContent = metrics.netWpm; el.resultaccuracy.textContent = `${metrics.accuracy}%`; el.resulttime.textContent = `${state.elapsed.toFixed(1)}s`; el.resultrawwpm.textContent = metrics.rawWpm; el.resultcpm.textContent = metrics.rawCpm; document.querySelector(".test-panel").classList.add("test-over"); el.results.classList.remove("hidden"); }
 function shuffle(items) { return [...items].sort(() => Math.random() - .5); }
 function escapeHtml(value) { const div = document.createElement("div"); div.textContent = value; return div.innerHTML; }
 
