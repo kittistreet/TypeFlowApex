@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A focused code typing speed test." />
+    <title>typeflow — code typing test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Restart Typeflow">typeflow<span>_</span></a>
+        <div class="live-stats" aria-live="polite">
+          <div><span id="wpm">0</span><small>wpm</small></div>
+          <div><span id="accuracy">100</span><small>acc</small></div>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="Test controls">
+        <label>level
+          <select id="level-select" disabled><option>Loading levels…</option></select>
+        </label>
+        <label>set
+          <select id="set-select" disabled><option>All sets</option></select>
+        </label>
+        <div class="control-group"><span>mode</span>
+          <button class="choice active" data-mode="time" type="button">time</button>
+          <button class="choice" data-mode="sentences" type="button">sentences</button>
+        </div>
+        <div class="control-group" id="amount-control"><span>amount</span>
+          <button class="choice active" data-value="30" type="button">30s</button>
+          <button class="choice" data-value="15" type="button">15s</button>
+          <button class="choice" data-value="60" type="button">60s</button>
+        </div>
+        <button id="restart-button" class="restart" type="button" title="Restart (Tab or Esc)" aria-label="Restart test">↻</button>
+      </section>
+
+      <section class="test-panel" aria-label="Typing test">
+        <div id="status-message" class="status-message">Loading practice material…</div>
+        <div id="timer" class="timer" aria-live="polite">30</div>
+        <div id="code-display" class="code-display" aria-live="off" aria-label="Code to type"></div>
+        <p class="hint"><kbd>tab</kbd> or <kbd>esc</kbd> to restart</p>
+      </section>
+
+      <section id="results" class="results hidden" aria-live="polite">
+        <p class="result-eyebrow">test complete</p>
+        <div class="result-main"><strong id="result-wpm">0</strong><span>wpm</span></div>
+        <div class="result-grid">
+          <div><span id="result-accuracy">0%</span><small>accuracy</small></div>
+          <div><span id="result-time">0s</span><small>time</small></div>
+          <div><span id="result-cpm">0</span><small>raw cpm</small></div>
+        </div>
+        <button id="try-again" type="button">try again</button>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
