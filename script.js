@@ -71,6 +71,16 @@ function start() { state.running = true; state.startedAt = performance.now(); st
 function tick() { state.elapsed = (performance.now() - state.startedAt) / 1000; const left = Math.max(0, state.amount - state.elapsed); el.timer.textContent = Math.ceil(left); updateStats(); if (left <= 0) finish(); }
 function handleKey(event) {
   if (event.key === "Tab" || event.key === "Escape") { event.preventDefault(); restart(); return; }
+  if (event.key === "Backspace") {
+    event.preventDefault();
+    if (!state.text || state.index === 0) return;
+    state.index--;
+    if (state.history[state.index] === false) state.mistakes--;
+    delete state.history[state.index];
+    state.typed--;
+    render(); updateStats();
+    return;
+  }
   if (!state.text || state.index >= state.text.length || event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
   event.preventDefault(); if (!state.running) start();
   const correct = event.key === state.text[state.index]; state.history[state.index] = correct; state.typed++; if (!correct) state.mistakes++;
