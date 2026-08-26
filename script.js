@@ -1,8 +1,13 @@
 "use strict";
 
-const state = { data: null, prompts: [], text: "", index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30 };
+const state = { data: null, prompts: [], baseText: "", text: "", index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30, caseMode: "default" };
 const el = Object.fromEntries(["level-select", "set-select", "code-display", "status-message", "timer", "wpm", "accuracy", "results", "result-wpm", "result-accuracy", "result-time", "result-raw-wpm", "result-cpm", "restart-button", "try-again"].map(id => [id.replaceAll("-", ""), document.getElementById(id)]));
 const choices = document.querySelectorAll(".choice");
+const savedSelection = {
+  get(key) { try { return localStorage.getItem(`typeflow.${key}`); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(`typeflow.${key}`, value); } catch { /* Private browsing can disable storage. */ } }
+};
+state.caseMode = savedSelection.get("case") === "lowercase" ? "lowercase" : "default";
 
 async function loadData() {
   try {
@@ -18,6 +23,7 @@ async function loadData() {
     state.data = json.categories.filter(category => Array.isArray(category.sets));
     if (!state.data.length) throw new Error("No valid levels were found in the practice data.");
     populateLevels();
+    restoreSelection();
     el.levelselect.disabled = false;
     el.setselect.disabled = false;
     restart();
@@ -38,6 +44,14 @@ function populateSets() {
   const sets = categories.flatMap(c => c.sets.map(s => ({ ...s, level: c.level })));
   el.setselect.innerHTML = '<option value="all">All sets</option>' + sets.map(s => `<option value="${escapeHtml(`${s.level}:${s.set_id}`)}">${escapeHtml(`${s.level} · ${s.title || `Set ${s.set_id}`}`)}</option>`).join("");
 }
+function selectIfAvailable(select, value) {
+  if (value && [...select.options].some(option => option.value === value)) select.value = value;
+}
+function restoreSelection() {
+  selectIfAvailable(el.levelselect, savedSelection.get("level"));
+  populateSets();
+  selectIfAvailable(el.setselect, savedSelection.get("set"));
+}
 function getPrompts() {
   const level = el.levelselect.value, set = el.setselect.value;
   return state.data
@@ -51,10 +65,14 @@ function buildText() {
   const count = state.mode === "sentences" ? state.amount : Math.max(8, state.prompts.length);
   return Array.from({ length: count }, (_, i) => state.prompts[i % state.prompts.length]).join("\n");
 }
-function restart() {
+function formatText(text) { return state.caseMode === "lowercase" ? text.toLowerCase() : text; }
+function restart(useNewPrompt = true) {
   clearInterval(state.timerId);
   Object.assign(state, { index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, running: false, history: [] });
-  try { state.text = buildText(); } catch (error) { el.statusmessage.textContent = error.message; el.statusmessage.classList.add("error"); return; }
+  try {
+    if (useNewPrompt || !state.baseText) state.baseText = buildText();
+    state.text = formatText(state.baseText);
+  } catch (error) { el.statusmessage.textContent = error.message; el.statusmessage.classList.add("error"); return; }
   el.statusmessage.textContent = "Start typing to begin";
   el.statusmessage.classList.remove("error"); el.results.classList.add("hidden"); document.querySelector(".test-panel").classList.remove("test-over");
   el.timer.classList.toggle("hidden", state.mode === "sentences"); el.timer.textContent = state.mode === "time" ? state.amount : "";
@@ -112,7 +130,17 @@ function renderAmountButtons() {
     button.classList.add("active"); state.amount = Number(button.dataset.value); restart();
   }));
 }
-el.levelselect.addEventListener("change", () => { populateSets(); restart(); }); el.setselect.addEventListener("change", restart); el.restartbutton.addEventListener("click", restart); el.tryagain.addEventListener("click", restart); document.addEventListener("keydown", handleKey);
+el.levelselect.addEventListener("change", () => { savedSelection.set("level", el.levelselect.value); populateSets(); savedSelection.set("set", el.setselect.value); restart(); });
+el.setselect.addEventListener("change", () => { savedSelection.set("set", el.setselect.value); restart(); });
+el.restartbutton.addEventListener("click", restart); el.tryagain.addEventListener("click", restart); document.addEventListener("keydown", handleKey);
 choices.forEach(button => { if (button.dataset.mode) button.addEventListener("click", () => { document.querySelectorAll('[data-mode]').forEach(item => item.classList.remove("active")); button.classList.add("active"); state.mode = button.dataset.mode; renderAmountButtons(); restart(); }); });
+document.querySelectorAll("[data-case]").forEach(button => {
+  button.classList.toggle("active", button.dataset.case === state.caseMode);
+  button.addEventListener("click", event => {
+    event.preventDefault();
+    document.querySelectorAll("[data-case]").forEach(item => item.classList.remove("active"));
+    button.classList.add("active"); state.caseMode = button.dataset.case; savedSelection.set("case", state.caseMode); restart(false);
+  });
+});
 renderAmountButtons();
 loadData();
