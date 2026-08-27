@@ -1,6 +1,7 @@
 "use strict";
 
-const state = { data: null, prompts: [], baseText: "", text: "", index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30, caseMode: "default" };
+const MAX_CONSECUTIVE_INCORRECT = 2;
+const state = { data: null, prompts: [], baseText: "", text: "", index: 0, uncorrectedErrors: 0, consecutiveIncorrect: 0, inputBlocked: false, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, timerId: null, running: false, mode: "time", amount: 30, caseMode: "default" };
 const el = Object.fromEntries(["level-select", "set-select", "code-display", "status-message", "timer", "wpm", "accuracy", "results", "result-wpm", "result-accuracy", "result-time", "result-raw-wpm", "result-cpm", "restart-button", "try-again", "next-text"].map(id => [id.replaceAll("-", ""), document.getElementById(id)]));
 const choices = document.querySelectorAll(".choice");
 const savedSelection = {
@@ -68,7 +69,7 @@ function buildText() {
 function formatText(text) { return state.caseMode === "lowercase" ? text.toLowerCase() : text; }
 function restart(useNewPrompt = true) {
   clearInterval(state.timerId);
-  Object.assign(state, { index: 0, uncorrectedErrors: 0, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, running: false, history: [] });
+  Object.assign(state, { index: 0, uncorrectedErrors: 0, consecutiveIncorrect: 0, inputBlocked: false, inputChars: 0, correctChars: 0, incorrectChars: 0, startedAt: 0, elapsed: 0, running: false, history: [] });
   try {
     if (useNewPrompt || !state.baseText) state.baseText = buildText();
     state.text = formatText(state.baseText);
@@ -95,15 +96,36 @@ function handleKey(event) {
     state.index--;
     if (state.history[state.index] === false) state.uncorrectedErrors--;
     delete state.history[state.index];
+    state.consecutiveIncorrect = 0;
+    for (let i = state.index - 1; state.history[i] === false; i--) state.consecutiveIncorrect++;
+    if (state.inputBlocked) {
+      state.inputBlocked = false;
+      el.statusmessage.textContent = "Continue typing";
+      el.statusmessage.classList.remove("error");
+    }
     render(); updateStats();
     return;
   }
+  if (state.inputBlocked) return;
   if (!state.text || state.index >= state.text.length || event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
   event.preventDefault(); if (!state.running) start();
   const correct = event.key === state.text[state.index]; state.history[state.index] = correct;
   state.inputChars++;
-  if (correct) state.correctChars++; else { state.incorrectChars++; state.uncorrectedErrors++; }
+  if (correct) {
+    state.correctChars++;
+    state.consecutiveIncorrect = 0;
+  } else {
+    state.incorrectChars++;
+    state.uncorrectedErrors++;
+    state.consecutiveIncorrect++;
+  }
   state.index++; render(); updateStats();
+  if (state.consecutiveIncorrect > MAX_CONSECUTIVE_INCORRECT) {
+    state.inputBlocked = true;
+    el.statusmessage.textContent = "Typing locked after 3 consecutive incorrect inputs. Use Backspace to correct or restart.";
+    el.statusmessage.classList.add("error");
+    return;
+  }
   if (state.mode === "sentences" && state.index === state.text.length) finish();
 }
 function getMetrics(elapsed = state.elapsed) {
