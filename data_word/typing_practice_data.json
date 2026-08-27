@@ -14,7 +14,12 @@
             "INSERT INTO departments (department_id, name) VALUES (10, 'IT');",
             "UPDATE employees SET salary = salary * 1.1 WHERE job_id = 'DEV';",
             "DELETE FROM temp_logs WHERE log_date < SYSDATE - 30;",
-            "CREATE TABLE user_status (id NUMBER PRIMARY KEY, status VARCHAR2(20));"
+            "CREATE TABLE user_status (id NUMBER PRIMARY KEY, status VARCHAR2(20));",
+            "SELECT DISTINCT city FROM customers ORDER BY city ASC;",
+            "ALTER TABLE orders ADD created_by VARCHAR2(100);",
+            "DROP TABLE staging_orders PURGE;",
+            "TRUNCATE TABLE session_events;",
+            "CREATE INDEX idx_emp_email ON employees(email);"
           ]
         },
         {
@@ -25,7 +30,12 @@
             "v_total_amount := v_subtotal + v_tax_amount;",
             "IF v_count > 0 THEN DBMS_OUTPUT.PUT_LINE('Records found'); END IF;",
             "v_is_active := TRUE; v_status_code := 200;",
-            "SELECT COUNT(*) INTO v_user_count FROM app_users WHERE status = 'A';"
+            "SELECT COUNT(*) INTO v_user_count FROM app_users WHERE status = 'A';",
+            "v_start_date := TRUNC(SYSDATE);",
+            "v_message := 'Welcome, ' || v_emp_name || '!';",
+            "v_discount := CASE WHEN v_total > 100 THEN 10 ELSE 0 END;",
+            "SELECT email INTO v_email FROM app_users WHERE user_id = p_user_id;",
+            "DBMS_OUTPUT.PUT_LINE('Total: ' || TO_CHAR(v_total_amount));"
           ]
         },
         {
@@ -36,7 +46,12 @@
             "SELECT TO_CHAR(sysdate, 'YYYY-MM-DD HH24:MI:SS') FROM dual;",
             "SELECT ROUND(TRUNC(salary, 2), 0) FROM employees;",
             "SELECT SUBSTR(phone_number, 1, 3), LENGTH(first_name) FROM employees;",
-            "SELECT ADD_MONTHS(SYSDATE, 6), LAST_DAY(SYSDATE) FROM DUAL;"
+            "SELECT ADD_MONTHS(SYSDATE, 6), LAST_DAY(SYSDATE) FROM DUAL;",
+            "SELECT INITCAP(first_name || ' ' || last_name) FROM employees;",
+            "SELECT REPLACE(phone_number, '.', '-') FROM contacts;",
+            "SELECT NVL2(manager_id, 'Assigned', 'Unassigned') FROM employees;",
+            "SELECT EXTRACT(YEAR FROM hire_date) FROM employees;",
+            "SELECT REGEXP_SUBSTR(email, '[^@]+') FROM app_users;"
           ]
         },
         {
@@ -47,7 +62,12 @@
             "l_user_id := apex_custom_auth.get_user_id;",
             "apex_util.set_session_state('P10_STATUS', 'APPROVED');",
             "l_session_id := v('APP_SESSION');",
-            "l_page_id := apex_application.g_flow_step_id;"
+            "l_page_id := apex_application.g_flow_step_id;",
+            "apex_util.redirect_url(p_url => 'f?p=' || :APP_ID || ':10:' || :APP_SESSION);",
+            "apex_debug.message('Current user is %s', :APP_USER);",
+            "apex_util.set_session_state('P5_TOTAL', l_total);",
+            "l_workspace_id := apex_util.find_security_group_id(p_workspace => 'DEMO');",
+            "apex_application.g_notification := 'Please review the submitted request.';"
           ]
         },
         {
@@ -58,7 +78,12 @@
             "SELECT dept_id, AVG(salary) FROM employees GROUP BY dept_id;",
             "SELECT status, COUNT(1) FROM orders GROUP BY status HAVING COUNT(1) > 5;",
             "SELECT p.product_name, c.category_name FROM products p LEFT JOIN categories c ON p.cat_id = c.id;",
-            "SELECT MAX(created_at), MIN(created_at) FROM audit_logs;"
+            "SELECT MAX(created_at), MIN(created_at) FROM audit_logs;",
+            "SELECT e.name, m.name FROM employees e LEFT JOIN employees m ON e.manager_id = m.id;",
+            "SELECT category_id, SUM(price * quantity) FROM order_items GROUP BY category_id;",
+            "SELECT d.name, COUNT(e.id) FROM departments d LEFT JOIN employees e ON e.dept_id = d.id GROUP BY d.name;",
+            "SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id ORDER BY order_count DESC;",
+            "SELECT department_id, SUM(salary) FROM employees WHERE active = 'Y' GROUP BY department_id;"
           ]
         }
       ]
@@ -75,7 +100,12 @@
             "IF v_role = 'ADMIN' THEN process_admin(); ELSIF v_role = 'USER' THEN process_user(); ELSE RAISE_APPLICATION_ERROR(-20001, 'Invalid Role'); END IF;",
             "WHILE n_counter <= 100 LOOP n_counter := n_counter + 1; EXIT WHEN n_counter = 50; END LOOP;",
             "CASE v_grade WHEN 'A' THEN v_bonus := 1000; WHEN 'B' THEN v_bonus := 500; ELSE v_bonus := 0; END CASE;",
-            "GOTO jump_here; <<jump_here>> DBMS_OUTPUT.PUT_LINE('Jumped');"
+            "GOTO jump_here; <<jump_here>> DBMS_OUTPUT.PUT_LINE('Jumped');",
+            "FOR i IN REVERSE 1 .. 10 LOOP v_sum := v_sum + i; END LOOP;",
+            "LOOP FETCH c_orders INTO l_order; EXIT WHEN c_orders%NOTFOUND; END LOOP;",
+            "IF v_enabled AND NOT v_locked THEN activate_account(p_id); END IF;",
+            "CONTINUE WHEN r.status = 'CANCELLED';",
+            "EXIT outer_loop WHEN l_error_count > 10;"
           ]
         },
         {
@@ -86,7 +116,12 @@
             "apex_collection.add_member(p_collection_name => 'ITEMS', p_c001 => :P1_ITEM_ID, p_n001 => :P1_QTY);",
             "apex_collection.truncate_collection(p_collection_name => 'LOG_TEMP');",
             "SELECT c001, n001 FROM apex_collections WHERE collection_name = 'SHOPPING_CART';",
-            "apex_collection.delete_member(p_collection_name => 'MY_COLL', p_seq => l_seq_id);"
+            "apex_collection.delete_member(p_collection_name => 'MY_COLL', p_seq => l_seq_id);",
+            "apex_collection.update_member_attribute(p_collection_name => 'CART', p_seq => l_seq, p_attr_number => 1, p_attr_value => 'SAVED');",
+            "apex_collection.create_or_truncate_collection(p_collection_name => 'IMPORT_ROWS');",
+            "SELECT seq_id, c001, c002 FROM apex_collections WHERE collection_name = 'IMPORT_ROWS' ORDER BY seq_id;",
+            "apex_collection.delete_collection(p_collection_name => 'OLD_RESULTS');",
+            "apex_collection.add_members(p_collection_name => 'BATCH', p_c001 => l_codes);"
           ]
         },
         {
@@ -97,7 +132,12 @@
             "SELECT * FROM (SELECT id, name, ROW_NUMBER() OVER (ORDER BY created_date DESC) as rn FROM audit_log) WHERE rn <= 10;",
             "UPDATE account a SET balance = (SELECT SUM(amount) FROM transactions t WHERE t.acc_id = a.id);",
             "SELECT name FROM emp WHERE dept_id IN (SELECT id FROM dept WHERE location = 'BANGKOK');",
-            "SELECT id, name, LAG(salary, 1) OVER (ORDER BY hire_date) as prev_sal FROM employees;"
+            "SELECT id, name, LAG(salary, 1) OVER (ORDER BY hire_date) as prev_sal FROM employees;",
+            "SELECT name FROM employees e WHERE salary > (SELECT AVG(salary) FROM employees WHERE dept_id = e.dept_id);",
+            "SELECT dept_id, SUM(salary) OVER (PARTITION BY dept_id) AS dept_total FROM employees;",
+            "SELECT id, LEAD(status) OVER (ORDER BY created_at) AS next_status FROM tickets;",
+            "SELECT * FROM orders WHERE EXISTS (SELECT 1 FROM order_items i WHERE i.order_id = orders.id);",
+            "WITH recent AS (SELECT * FROM logs WHERE log_date >= SYSDATE - 7) SELECT COUNT(*) FROM recent;"
           ]
         },
         {
@@ -108,7 +148,12 @@
             "EXCEPTION WHEN TOO_MANY_ROWS THEN apex_error.add_error(p_message => 'Duplicate row found', p_display_location => apex_error.c_inline_in_notification);",
             "EXCEPTION WHEN OTHERS THEN ROLLBACK; logger.log_error(SQLERRM, SQLCODE); RAISE;",
             "IF SQL%NOTFOUND THEN RAISE_APPLICATION_ERROR(-20002, 'Update failed'); END IF;",
-            "PRAGMA EXCEPTION_INIT(e_fk_violation, -2292);"
+            "PRAGMA EXCEPTION_INIT(e_fk_violation, -2292);",
+            "EXCEPTION WHEN DUP_VAL_ON_INDEX THEN v_result := 'Already exists';",
+            "SAVEPOINT before_update; UPDATE orders SET status = 'PROCESSING' WHERE id = p_id;",
+            "ROLLBACK TO before_update;",
+            "RAISE_APPLICATION_ERROR(-20010, 'Customer is required');",
+            "WHEN e_fk_violation THEN apex_error.add_error(p_message => 'Related records exist');"
           ]
         },
         {
@@ -119,7 +164,12 @@
             "l_url := apex_page.get_url(p_page => '2', p_items => 'P2_ID', p_values => :P1_ID);",
             "apex_theme.clear_user_style(p_application_id => :APP_ID, p_user => :APP_USER);",
             "IF apex_authentication.is_authenticated THEN apex_util.redirect_url(p_url => 'f?p='||:APP_ID||':1:'||:APP_SESSION); END IF;",
-            "apex_debug.info('Processing started for ID: %s', :P5_CUSTOMER_ID);"
+            "apex_debug.info('Processing started for ID: %s', :P5_CUSTOMER_ID);",
+            "apex_json.initialize_clob_output; apex_json.open_array; apex_json.write('item'); apex_json.close_array;",
+            "l_value := apex_util.get_session_state('P10_SEARCH');",
+            "apex_util.prepare_url(p_url => 'f?p=' || :APP_ID || ':20:' || :APP_SESSION);",
+            "apex_string.split_numbers(p_str => :P1_SELECTED_IDS, p_sep => ':');",
+            "apex_debug.warn('No matching records were found.');"
           ]
         }
       ]
@@ -136,7 +186,12 @@
             "CREATE OR REPLACE FUNCTION get_emp_json(p_id IN NUMBER) RETURN CLOB IS l_json CLOB; BEGIN SELECT JSON_OBJECT('id' VALUE id, 'name' VALUE name) INTO l_json FROM emp WHERE id = p_id; RETURN l_json; END;",
             "TYPE t_emp_list IS TABLE OF employees%ROWTYPE INDEX BY PLS_INTEGER; l_emps t_emp_list;",
             "EXECUTE IMMEDIATE 'UPDATE ' || DBMS_ASSERT.ENQUOTE_NAME(p_table) || ' SET status = :1 WHERE id = :2' USING p_status, p_id;",
-            "MERGE INTO target_table t USING source_table s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.val = s.val WHEN NOT MATCHED THEN INSERT (id, val) VALUES (s.id, s.val);"
+            "MERGE INTO target_table t USING source_table s ON (t.id = s.id) WHEN MATCHED THEN UPDATE SET t.val = s.val WHEN NOT MATCHED THEN INSERT (id, val) VALUES (s.id, s.val);",
+            "CREATE OR REPLACE PACKAGE order_pkg AS PROCEDURE submit_order(p_order_id IN NUMBER); END order_pkg;",
+            "FUNCTION calculate_tax(p_amount NUMBER, p_rate NUMBER) RETURN NUMBER IS BEGIN RETURN p_amount * p_rate / 100; END;",
+            "TYPE t_name_tab IS TABLE OF VARCHAR2(100) INDEX BY VARCHAR2(30);",
+            "l_result := DBMS_SQL.OPEN_CURSOR; DBMS_SQL.PARSE(l_result, l_sql, DBMS_SQL.NATIVE);",
+            "PRAGMA SERIALLY_REUSABLE;"
           ]
         },
         {
@@ -147,7 +202,12 @@
             "apex_json.parse(l_clob_response); l_token := apex_json.get_varchar2(p_path => 'auth.access_token'); l_count := apex_json.get_count(p_path => 'items');",
             "FOR i IN 1 .. apex_json.get_count(p_path => 'data') LOOP l_id := apex_json.get_number(p_path => 'data[%d].id', p_subst01 => i); END LOOP;",
             "apex_web_service.oauth_authenticate(p_token_url => 'https://auth.api.com/token', p_client_id => :P0_CLIENT, p_client_secret => :P0_SECRET);",
-            "l_clob := apex_web_service.make_rest_request_b(p_url => p_endpoint, p_http_method => 'GET', p_credential_static_id => 'MY_CRED');"
+            "l_clob := apex_web_service.make_rest_request_b(p_url => p_endpoint, p_http_method => 'GET', p_credential_static_id => 'MY_CRED');",
+            "apex_web_service.g_request_headers(2).name := 'Accept'; apex_web_service.g_request_headers(2).value := 'application/json';",
+            "l_status := apex_web_service.g_status_code; IF l_status != 200 THEN RAISE_APPLICATION_ERROR(-20020, 'Service failed'); END IF;",
+            "apex_json.open_object; apex_json.write('requestId', l_request_id); apex_json.close_object;",
+            "l_name := apex_json.get_varchar2(p_path => 'data[%d].name', p_subst01 => 1);",
+            "apex_web_service.clear_request_headers;"
           ]
         },
         {
@@ -158,7 +218,12 @@
             "OPEN c_ref FOR 'SELECT * FROM ' || DBMS_ASSERT.SQL_OBJECT_NAME(p_view_name) || ' WHERE created_at >= :1' USING p_start_date;",
             "DBMS_LOB.CREATETEMPORARY(l_blob, TRUE); DBMS_LOB.CONVERTTOCLOB(l_clob, l_blob, DBMS_LOB.LOBMAXSIZE, l_dest_offset, l_src_offset, DBMS_LOB.DEFAULT_CSID, l_lang_context, l_warning);",
             "ALTER SESSION SET PLSQL_OPTIMIZE_LEVEL = 3; ALTER PROCEDURE process_transactions COMPILE REUSE SETTINGS;",
-            "SYS.DBMS_PARALLEL_EXECUTE.CREATE_TASK(task_name => 'PURGE_LOGS_TASK'); SYS.DBMS_PARALLEL_EXECUTE.RUN_TASK(task_name => 'PURGE_LOGS_TASK', sql_stmt => 'DELETE FROM logs WHERE id BETWEEN :start_id AND :end_id', chunk_size => 50000);"
+            "SYS.DBMS_PARALLEL_EXECUTE.CREATE_TASK(task_name => 'PURGE_LOGS_TASK'); SYS.DBMS_PARALLEL_EXECUTE.RUN_TASK(task_name => 'PURGE_LOGS_TASK', sql_stmt => 'DELETE FROM logs WHERE id BETWEEN :start_id AND :end_id', chunk_size => 50000);",
+            "FORALL i IN INDICES OF l_ids SAVE EXCEPTIONS INSERT INTO archive_orders VALUES l_orders(i);",
+            "FETCH c_ref BULK COLLECT INTO l_rows LIMIT 500;",
+            "EXECUTE IMMEDIATE l_ddl_statement;",
+            "DBMS_SQL.BIND_VARIABLE(l_cursor, ':P_STATUS', p_status);",
+            "SYS.DBMS_PARALLEL_EXECUTE.DROP_TASK(task_name => 'PURGE_LOGS_TASK');"
           ]
         },
         {
@@ -169,7 +234,12 @@
             "apex_css.add_file(p_name => 'custom_style', p_directory => p_plugin.attribute_01); apex_javascript.add_onload_code(p_code => 'initMyPlugin(' || apex_javascript.value(p_region.static_id) || ');');",
             "apex_plugin_util.execute_type_plugin_query(p_sql_statement => p_region.source, p_component_name => p_region.name, p_max_rows => p_region.fetched_rows);",
             "apex_error.add_error(p_message => 'Invalid Configuration', p_additional_info => p_plugin.attribute_02, p_display_location => apex_error.c_on_error_page);",
-            "apex_javascript.add_plugin_process_url(p_process_name => 'AJAX_HANDLER', p_search_type => apex_javascript.c_search_type_exact);"
+            "apex_javascript.add_plugin_process_url(p_process_name => 'AJAX_HANDLER', p_search_type => apex_javascript.c_search_type_exact);",
+            "FUNCTION ajax_my_plugin (p_dynamic_action IN apex_plugin.t_dynamic_action, p_plugin IN apex_plugin.t_plugin) RETURN apex_plugin.t_dynamic_action_ajax_result IS BEGIN apex_json.open_object; apex_json.write('success', TRUE); apex_json.close_object; RETURN NULL; END;",
+            "apex_plugin_util.print_hidden_if_readonly(p_item_name => p_item.name, p_value => p_value, p_is_readonly => p_is_readonly);",
+            "apex_css.add(p_css => '.my-plugin { padding: 1rem; }');",
+            "apex_javascript.add_library(p_name => 'my_plugin', p_directory => p_plugin.file_prefix);",
+            "l_result.ajax_identifier := apex_plugin.get_ajax_identifier;"
           ]
         },
         {
@@ -180,7 +250,12 @@
             "SELECT j.id, jt.customer_name, jt.order_date FROM json_orders j, JSON_TABLE(j.json_doc, '$.orders[*]' COLUMNS (customer_name VARCHAR2(50) PATH '$.customer', order_date DATE PATH '$.date')) jt;",
             "UPDATE user_profiles SET profile_data = JSON_TRANSFORM(profile_data, SET '$.settings.theme' = 'dark', REMOVE '$.temporary_token') WHERE user_id = p_user_id;",
             "SELECT department_id, LISTAGG(first_name, ', ') WITHIN GROUP (ORDER BY hire_date) AS team_members FROM employees GROUP BY department_id;",
-            "SELECT * FROM (SELECT year, region, sales FROM regional_sales) PIVOT (SUM(sales) FOR region IN ('NORTH' AS north, 'SOUTH' AS south, 'EAST' AS east, 'WEST' AS west));"
+            "SELECT * FROM (SELECT year, region, sales FROM regional_sales) PIVOT (SUM(sales) FOR region IN ('NORTH' AS north, 'SOUTH' AS south, 'EAST' AS east, 'WEST' AS west));",
+            "INSERT INTO order_events (event_data) VALUES (JSON_OBJECT('type' VALUE 'CREATED', 'orderId' VALUE p_order_id));",
+            "SELECT JSON_VALUE(profile_data, '$.settings.language') AS language FROM user_profiles;",
+            "SELECT JSON_SERIALIZE(JSON_OBJECT('id' VALUE id, 'name' VALUE name) RETURNING CLOB) FROM employees;",
+            "WITH ranked_sales AS (SELECT region, sales, RANK() OVER (ORDER BY sales DESC) AS rn FROM regional_sales) SELECT region FROM ranked_sales WHERE rn <= 3;",
+            "SELECT department_id, MEDIAN(salary) KEEP (DENSE_RANK LAST ORDER BY hire_date) FROM employees GROUP BY department_id;"
           ]
         }
       ]
