@@ -147,10 +147,23 @@ function renderAmountButtons() {
   const values = state.mode === "time" ? [[30, "30s"], [15, "15s"], [60, "60s"]] : [[1, "1"], [3, "3"], [5, "5"]];
   state.amount = values[0][0];
   document.getElementById("amount-control").innerHTML = '<span>amount</span>' + values.map(([value, label], i) => `<button class="choice${i === 0 ? " active" : ""}" data-value="${value}" type="button">${label}</button>`).join("");
-  document.querySelectorAll("#amount-control .choice").forEach(button => button.addEventListener("click", () => {
-    document.querySelectorAll("#amount-control .choice").forEach(item => item.classList.remove("active"));
-    button.classList.add("active"); state.amount = Number(button.dataset.value); restart();
-  }));
+}
+function resetTestSession() { restart(); }
+function handleAmountSelection(event) {
+  const button = event.target.closest("[data-value]");
+  if (!button || !event.currentTarget.contains(button)) return;
+  event.preventDefault();
+  document.querySelectorAll("#amount-control .choice").forEach(item => item.classList.toggle("active", item === button));
+  state.amount = Number(button.dataset.value);
+  resetTestSession();
+}
+function handleModeSelection(event) {
+  event.preventDefault();
+  const button = event.currentTarget;
+  document.querySelectorAll("[data-mode]").forEach(item => item.classList.toggle("active", item === button));
+  state.mode = button.dataset.mode;
+  renderAmountButtons();
+  resetTestSession();
 }
 el.levelselect.addEventListener("change", () => { savedSelection.set("level", el.levelselect.value); populateSets(); savedSelection.set("set", el.setselect.value); restart(); });
 el.setselect.addEventListener("change", () => { savedSelection.set("set", el.setselect.value); restart(); });
@@ -158,7 +171,8 @@ el.restartbutton.addEventListener("click", restart);
 el.tryagain.addEventListener("click", () => restart(false));
 el.nexttext.addEventListener("click", () => restart(true));
 document.addEventListener("keydown", handleKey);
-choices.forEach(button => { if (button.dataset.mode) button.addEventListener("click", () => { document.querySelectorAll('[data-mode]').forEach(item => item.classList.remove("active")); button.classList.add("active"); state.mode = button.dataset.mode; renderAmountButtons(); restart(); }); });
+choices.forEach(button => { if (button.dataset.mode) button.addEventListener("click", handleModeSelection); });
+document.getElementById("amount-control").addEventListener("click", handleAmountSelection);
 document.querySelectorAll("[data-case]").forEach(button => {
   button.classList.toggle("active", button.dataset.case === state.caseMode);
   button.addEventListener("click", event => {
