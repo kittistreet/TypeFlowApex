@@ -58,6 +58,23 @@ const savedSelection = {
     }
   },
 };
+const appearanceToggle = document.getElementById("appearance-toggle");
+
+function setAppearance(vscodeMode) {
+  document.body.classList.toggle("vscode-mode", vscodeMode);
+  appearanceToggle.setAttribute("aria-pressed", String(vscodeMode));
+  appearanceToggle.innerHTML = vscodeMode
+    ? '<span aria-hidden="true">◐</span> Original view'
+    : '<span aria-hidden="true">&lt;/&gt;</span> VS Code mode';
+  appearanceToggle.title = vscodeMode
+    ? "Return to the original appearance"
+    : "Switch to VS Code-style appearance";
+  savedSelection.set("appearance", vscodeMode ? "vscode" : "default");
+}
+setAppearance(savedSelection.get("appearance") === "vscode");
+appearanceToggle.addEventListener("click", () =>
+  setAppearance(!document.body.classList.contains("vscode-mode")),
+);
 state.caseMode =
   savedSelection.get("case") === "lowercase" ? "lowercase" : "default";
 
@@ -345,20 +362,32 @@ function resetTestSession() {
 function handleAmountSelection(event) {
   const button = event.target.closest("[data-value]");
   if (!button || !event.currentTarget.contains(button)) return;
+  const amount = Number(button.dataset.value);
+
+  // Button clicks and keyboard activation both arrive here.  A selection that
+  // is already active must not reset the current typing session or re-render.
+  if (state.amount === amount) return;
+
   event.preventDefault();
+  state.amount = amount;
   document
     .querySelectorAll("#amount-control .choice")
     .forEach((item) => item.classList.toggle("active", item === button));
-  state.amount = Number(button.dataset.value);
   resetTestSession();
 }
 function handleModeSelection(event) {
-  event.preventDefault();
   const button = event.currentTarget;
+  const mode = button.dataset.mode;
+
+  // Do this check before rebuilding Amount controls, since rebuilding resets
+  // their default value and would otherwise restart the test unnecessarily.
+  if (state.mode === mode) return;
+
+  event.preventDefault();
+  state.mode = mode;
   document
     .querySelectorAll("[data-mode]")
     .forEach((item) => item.classList.toggle("active", item === button));
-  state.mode = button.dataset.mode;
   renderAmountButtons();
   resetTestSession();
 }

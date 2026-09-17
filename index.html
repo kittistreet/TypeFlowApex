@@ -21,8 +21,34 @@
           <div><span id="wpm">0</span><small>wpm</small></div>
           <div><span id="accuracy">100</span><small>acc</small></div>
         </div>
+        <button id="appearance-toggle" class="appearance-toggle" type="button" aria-pressed="false" title="Switch to VS Code-style appearance">
+          <span aria-hidden="true">&lt;/&gt;</span> VS Code mode
+        </button>
       </header>
 
+      <div class="ide-workbench">
+        <nav class="ide-activitybar" aria-label="IDE activity">
+          <button class="activity-icon active" type="button" aria-label="Explorer">⌘</button>
+          <button class="activity-icon" type="button" aria-label="Search">⌕</button>
+          <button class="activity-icon" type="button" aria-label="Source control">⑂</button>
+          <button class="activity-icon" type="button" aria-label="Extensions">▦</button>
+          <button class="activity-icon activity-bottom" type="button" aria-label="Settings">⚙</button>
+        </nav>
+        <aside class="ide-sidebar" aria-label="Explorer">
+          <div class="sidebar-heading">EXPLORER <span>•••</span></div>
+          <div class="project-name">TYPEFLOW-APEX <span>⌄</span></div>
+          <div class="file-tree">
+            <div class="tree-folder">⌄ &nbsp;data_word</div>
+            <div class="tree-file">{} &nbsp;typing_practice_data.json</div>
+            <div class="tree-file active">&lt;/&gt; &nbsp;typing-session.js</div>
+            <div class="tree-file"># &nbsp;settings.json</div>
+          </div>
+          <div class="sidebar-section">OUTLINE <span>⌄</span></div>
+          <div class="sidebar-section">TIMELINE <span>⌄</span></div>
+        </aside>
+        <section class="editor-workspace">
+          <div class="ide-tabs" aria-hidden="true"><div class="ide-tab active"><span>JS</span> typing-session.js <b>×</b></div><div class="ide-tab">Welcome <b>×</b></div></div>
+          <div class="ide-breadcrumb" aria-hidden="true">typeflow-apex &nbsp;›&nbsp; typing-session.js &nbsp;›&nbsp; <strong>practice</strong></div>
       <section class="controls" aria-label="Test controls">
         <label>level
           <select id="level-select" disabled><option>Loading levels…</option></select>
@@ -67,6 +93,11 @@
           <button id="next-text" class="next-text" type="button">next <span aria-hidden="true">→</span></button>
         </div>
       </section>
+        </section>
+      </div>
+      <footer class="ide-statusbar" aria-label="Status bar">
+        <span>⑂ main*</span><span>× 0 &nbsp; ⚠ 0</span><span class="status-spacer"></span><span>Ln 1, Col 1</span><span>Spaces: 2</span><span>UTF-8</span><span>{} JavaScript</span><span>◔ Prettier</span>
+      </footer>
     </main>
     <script src="script.js"></script>
   </body>
